@@ -81,7 +81,8 @@ export default {
      if (url.pathname === "/api/cek-konfigurasi") {
   return json({
     url_terbaca: Boolean(env.SUPABASE_URL),
-    secret_terbaca: Boolean(env.SUPABASE_SERVICE_ROLE_KEY)
+    secret_terbaca: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+    admin_key_terbaca: Boolean(env.ADMIN_SETUP_KEY)
   });
 }
 
