@@ -93,6 +93,29 @@ if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
         return json({ status: "online", database_configured: true });
       }
 
+      // TES KONEKSI DATABASE SUPABASE
+      if (url.pathname === "/api/tes-database" && request.method === "GET") {
+        try {
+          const rows = await db(
+            env,
+            "marketing_users?select=id&limit=1"
+          );
+
+          return json({
+            success: true,
+            database_connected: true,
+            table_accessible: true,
+            jumlah_data_terbaca: rows.length
+          });
+        } catch (error) {
+          return json({
+            success: false,
+            database_connected: false,
+            error: error.message
+          }, 500);
+        }
+      }
+
       // Membuat link pribadi. Hanya dapat dilakukan dengan kunci setup admin.
       if (url.pathname === "/api/admin/create-link" &&
           request.method === "POST") {
