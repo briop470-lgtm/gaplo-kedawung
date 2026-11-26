@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrator GAPLO</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#f1f5f9;color:#1e293b;font-family:Arial,sans-serif}
+main{max-width:650px;margin:30px auto}
+.card{background:white;padding:24px;border-radius:12px;box-shadow:0 3px 12px #0001}
+h1,h2{color:#102d50}
+label{display:block;font-weight:bold;margin-top:16px}
+input,select{width:100%;padding:13px;margin-top:7px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
+button{margin-top:18px;padding:13px 18px;background:#145ca8;color:white;border:0;border-radius:7px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+#hasil{display:none;margin-top:20px;padding:15px;background:#dcfce7;border-radius:8px;overflow-wrap:anywhere}
+#pesan{margin-top:15px;white-space:pre-wrap}
+.note{color:#64748b;font-size:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>GAPLO</h1>
+<h2>Administrator - Cabang Kedawung</h2>
+<p class="note">Halaman khusus pembuatan link akses AO dan marketing.</p>
+
+<label>ADMIN SETUP KEY</label>
+<input id="setupKey" type="password" autocomplete="off" placeholder="Masukkan kunci administrator">
+
+<label>Jenis Link</label>
+<select id="role">
+<option value="ao">Administrator / AO</option>
+<option value="marketing">Marketing</option>
+</select>
+
+<div id="namaArea" style="display:none">
+<label>Nama Marketing</label>
+<select id="nama">
+<option>HERU</option>
+<option>PUTRI</option>
+<option>INDAH</option>
+<option>DELA</option>
+<option>ARGA</option>
+<option>SUNARTO</option>
+<option>WAHYU</option>
+<option>ALFIDA</option>
+<option>DWIYONO</option>
+<option>YUNI</option>
+</select>
+</div>
+
+<button id="buat">Buat Link Akses</button>
+<div id="pesan"></div>
+
+<div id="hasil">
+<strong>Link berhasil dibuat</strong>
+<p class="note">Salin dan simpan link ini. Token hanya ditampilkan satu kali.</p>
+<input id="link" readonly>
+<button type="button" id="salin">Salin Link</button>
+</div>
+</div>
+</main>
+
+<script>
+const role = document.getElementById("role");
+const namaArea = document.getElementById("namaArea");
+const tombol = document.getElementById("buat");
+const pesan = document.getElementById("pesan");
+const hasil = document.getElementById("hasil");
+
+role.addEventListener("change", () => {
+  namaArea.style.display = role.value === "marketing" ? "block" : "none";
+});
+
+tombol.addEventListener("click", async () => {
+  const key = document.getElementById("setupKey").value.trim();
+
+  if (!key) {
+    pesan.textContent = "Masukkan ADMIN_SETUP_KEY terlebih dahulu.";
+    return;
+  }
+
+  tombol.disabled = true;
+  tombol.textContent = "Memproses...";
+  pesan.textContent = "";
+  hasil.style.display = "none";
+
+  try {
+    const body = { role: role.value };
+
+    if (role.value === "marketing") {
+      body.nama = document.getElementById("nama").value;
+    }
+
+    const response = await fetch("/api/admin/create-link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Setup-Key": key
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Gagal membuat link.");
+    }
+
+    const link = location.origin + "/#token=" + encodeURIComponent(data.token);
+
+    document.getElementById("link").value = link;
+    hasil.style.display = "block";
+    pesan.textContent = "Link " + data.role + " berhasil dibuat.";
+    
+    document.getElementById("setupKey").value = "";
+  } catch (error) {
+    pesan.textContent = "Gagal: " + error.message;
+  } finally {
+    tombol.disabled = false;
+    tombol.textContent = "Buat Link Akses";
+  }
+});
+
+document.getElementById("salin").addEventListener("click", async () => {
+  const link = document.getElementById("link").value;
+
+  try {
+    await navigator.clipboard.writeText(link);
+    pesan.textContent = "Link berhasil disalin. Simpan di tempat aman.";
+  } catch {
+    document.getElementById("link").select();
+    pesan.textContent = "Silakan salin link yang sudah dipilih.";
+  }
+});
+</script>
+</body>
+</html>
