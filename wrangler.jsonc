@@ -3,6 +3,7 @@
   "name": "gaplo-kedawung",
   "main": "worker.js",
   "compatibility_date": "2026-11-26",
+  "keep_vars": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
