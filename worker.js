@@ -78,9 +78,16 @@ export default {
     }
 
     try {
-      if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-        return json({ error: "Konfigurasi database belum lengkap" }, 500);
-      }
+     if (url.pathname === "/api/cek-konfigurasi") {
+  return json({
+    url_terbaca: Boolean(env.SUPABASE_URL),
+    secret_terbaca: Boolean(env.SUPABASE_SERVICE_ROLE_KEY)
+  });
+}
+
+if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  return json({ error: "Konfigurasi database belum lengkap" }, 500);
+}
 
       if (url.pathname === "/api/health" && request.method === "GET") {
         return json({ status: "online", database_configured: true });
