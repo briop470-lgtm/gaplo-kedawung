@@ -17,7 +17,13 @@ h2{color:#102d50;margin-top:0}
 input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;margin:7px 0 15px;font-size:15px}
 label{font-weight:bold;font-size:14px}
 button{background:#145ca8;color:white;border:0;padding:13px 20px;border-radius:7px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.6;cursor:not-allowed}
 .note{color:#64748b;font-size:13px}
+.status{padding:12px;border-radius:7px;margin:12px 0;display:none;overflow-wrap:anywhere}
+.ok{background:#dcfce7;color:#166534}
+.err{background:#fee2e2;color:#991b1b}
+.item{padding:13px 0;border-bottom:1px solid #e2e8f0}
+.item:last-child{border:0}
 footer{text-align:center;padding:25px;color:#64748b}
 </style>
 </head>
@@ -25,18 +31,23 @@ footer{text-align:center;padding:25px;color:#64748b}
 <header>
 <h1>GAPLO</h1>
 <p>Sistem Pendaftaran dan Monitoring Kredit</p>
-<p><b>BANK DJOKO TINGKIR - CABANG KEDAWUNG</b></p>
+<p><b>CABANG KEDAWUNG</b></p>
 </header>
+
 <main>
 <section class="card">
 <h2>Formulir Pendaftaran Kredit</h2>
 <p class="note">Silakan isi data calon debitur dengan benar.</p>
-<form id="creditForm">
+
+<div id="akses" class="status err"></div>
+<div id="pesan" class="status"></div>
+
+<form id="creditForm" style="display:none">
 <label>Nama Lengkap</label>
 <input name="nama" required>
 
 <label>NIK</label>
-<input name="nik" inputmode="numeric" maxlength="16" required>
+<input name="nik" inputmode="numeric" maxlength="16" minlength="16" required>
 
 <label>Alamat</label>
 <textarea name="alamat" required></textarea>
@@ -57,11 +68,11 @@ footer{text-align:center;padding:25px;color:#64748b}
 <input name="kabupaten" value="Sragen">
 
 <label>Status Perkawinan</label>
-<select name="status" required>
+<select name="status_perkawinan" required>
 <option value="">Pilih status</option>
-<option>Menikah</option>
-<option>Belum Menikah</option>
-<option>Cerai</option>
+<option value="Menikah">Menikah</option>
+<option value="Belum Menikah">Belum Menikah</option>
+<option value="Cerai">Cerai</option>
 </select>
 
 <label>Nomor HP</label>
@@ -76,26 +87,159 @@ footer{text-align:center;padding:25px;color:#64748b}
 <label>Keperluan Kredit</label>
 <textarea name="keperluan" required></textarea>
 
-<label>Upload KTP Suami</label>
-<input name="ktp_suami" type="file" accept="image/*">
+<p class="note">Upload KTP belum diaktifkan. Jangan mengirim dokumen KTP melalui formulir ini dahulu.</p>
 
-<label>Upload KTP Istri</label>
-<input name="ktp_istri" type="file" accept="image/*">
-
-<button type="submit">Daftarkan Pengajuan</button>
+<button id="kirim" type="submit">Daftarkan Pengajuan</button>
 </form>
 </section>
-<section class="card">
+
+<section class="card" id="monitoring" style="display:none">
 <h2>Monitoring Pengajuan</h2>
-<p>Fitur pemantauan status pengajuan akan diaktifkan setelah database dan akses pengguna selesai dikonfigurasi.</p>
+<div id="daftar" class="note">Memuat data...</div>
+<button type="button" id="muatUlang">Muat Ulang</button>
 </section>
 </main>
+
 <footer>GAPLO | Bank Djoko Tingkir Cabang Kedawung</footer>
+
 <script>
-document.getElementById("creditForm").addEventListener("submit",function(e){
-e.preventDefault();
-alert("Tampilan formulir berhasil diuji. Pengiriman data belum diaktifkan.");
+const API = "";
+let token = sessionStorage.getItem("gaplo_token");
+
+function tampil(id, teks, jenis) {
+  const el = document.getElementById(id);
+  el.textContent = teks;
+  el.className = "status " + jenis;
+  el.style.display = "block";
+}
+
+function ambilTokenDariLink() {
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const tokenLink = hash.get("token");
+
+  if (tokenLink) {
+    token = tokenLink;
+    sessionStorage.setItem("gaplo_token", token);
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(API + path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token,
+      ...(options.headers || {})
+    }
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Permintaan gagal.");
+  }
+
+  return result;
+}
+
+async function muatMonitoring() {
+  const daftar = document.getElementById("daftar");
+  daftar.textContent = "Memuat data...";
+
+  try {
+    const hasil = await api("/api/pengajuan");
+
+    if (!hasil.data || hasil.data.length === 0) {
+      daftar.textContent = "Belum ada pengajuan.";
+      return;
+    }
+
+    daftar.replaceChildren();
+
+    hasil.data.forEach(data => {
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const nama = document.createElement("b");
+      nama.textContent = data.nama || "-";
+
+      const status = document.createElement("div");
+      status.textContent = "Status: " + (data.status_pengajuan || "Menunggu");
+
+      const tanggal = document.createElement("div");
+      tanggal.className = "note";
+      tanggal.textContent = data.created_at
+        ? new Date(data.created_at).toLocaleString("id-ID")
+        : "";
+
+      item.append(nama, status, tanggal);
+      daftar.appendChild(item);
+    });
+  } catch (error) {
+    daftar.textContent = error.message;
+  }
+}
+
+async function mulai() {
+  ambilTokenDariLink();
+
+  if (!token) {
+    tampil("akses", "Link pribadi belum ditemukan. Silakan buka link akses dari administrator.", "err");
+    return;
+  }
+
+  try {
+    const identitas = await api("/api/me");
+
+    document.getElementById("creditForm").style.display = "block";
+    document.getElementById("monitoring").style.display = "block";
+
+    await muatMonitoring();
+  } catch (error) {
+    sessionStorage.removeItem("gaplo_token");
+    token = null;
+    tampil("akses", "Akses ditolak: " + error.message, "err");
+  }
+}
+
+document.getElementById("creditForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const tombol = document.getElementById("kirim");
+  const form = e.target;
+
+  tombol.disabled = true;
+  tombol.textContent = "Mengirim...";
+
+  try {
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    if (!/^\d{16}$/.test(data.nik)) {
+      throw new Error("NIK harus terdiri dari 16 angka.");
+    }
+
+    const hasil = await api("/api/pengajuan", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+
+    tampil("pesan", "Pengajuan berhasil disimpan ke database.", "ok");
+    form.reset();
+    document.querySelector('[name="kabupaten"]').value = "Sragen";
+
+    await muatMonitoring();
+  } catch (error) {
+    tampil("pesan", error.message, "err");
+  } finally {
+    tombol.disabled = false;
+    tombol.textContent = "Daftarkan Pengajuan";
+  }
 });
+
+document.getElementById("muatUlang").addEventListener("click", muatMonitoring);
+
+mulai();
 </script>
 </body>
 </html>
