@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAPLO - Pengajuan Kredit Kedawung</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#102d50;color:white;padding:25px 20px}
+header h1{margin:0;font-size:28px}
+header p{margin:8px 0 0;color:#dbeafe}
+main{max-width:950px;margin:25px auto;padding:15px}
+.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000c}
+h2{color:#102d50;margin-top:0}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;margin:7px 0 15px;font-size:15px}
+label{font-weight:bold;font-size:14px}
+button{background:#145ca8;color:white;border:0;padding:13px 20px;border-radius:7px;cursor:pointer;font-weight:bold}
+.note{color:#64748b;font-size:13px}
+footer{text-align:center;padding:25px;color:#64748b}
+</style>
+</head>
+<body>
+<header>
+<h1>GAPLO</h1>
+<p>Sistem Pendaftaran dan Monitoring Kredit</p>
+<p><b>BANK DJOKO TINGKIR - CABANG KEDAWUNG</b></p>
+</header>
+<main>
+<section class="card">
+<h2>Formulir Pendaftaran Kredit</h2>
+<p class="note">Silakan isi data calon debitur dengan benar.</p>
+<form id="creditForm">
+<label>Nama Lengkap</label>
+<input name="nama" required>
+
+<label>NIK</label>
+<input name="nik" inputmode="numeric" maxlength="16" required>
+
+<label>Alamat</label>
+<textarea name="alamat" required></textarea>
+
+<label>RT</label>
+<input name="rt">
+
+<label>RW</label>
+<input name="rw">
+
+<label>Desa/Kelurahan</label>
+<input name="desa">
+
+<label>Kecamatan</label>
+<input name="kecamatan">
+
+<label>Kabupaten</label>
+<input name="kabupaten" value="Sragen">
+
+<label>Status Perkawinan</label>
+<select name="status" required>
+<option value="">Pilih status</option>
+<option>Menikah</option>
+<option>Belum Menikah</option>
+<option>Cerai</option>
+</select>
+
+<label>Nomor HP</label>
+<input name="hp" type="tel" required>
+
+<label>Plafon Pengajuan (Rp)</label>
+<input name="plafon" type="number" min="1" required>
+
+<label>Jangka Waktu (Bulan)</label>
+<input name="jangka_waktu" type="number" min="1" required>
+
+<label>Keperluan Kredit</label>
+<textarea name="keperluan" required></textarea>
+
+<label>Upload KTP Suami</label>
+<input name="ktp_suami" type="file" accept="image/*">
+
+<label>Upload KTP Istri</label>
+<input name="ktp_istri" type="file" accept="image/*">
+
+<button type="submit">Daftarkan Pengajuan</button>
+</form>
+</section>
+<section class="card">
+<h2>Monitoring Pengajuan</h2>
+<p>Fitur pemantauan status pengajuan akan diaktifkan setelah database dan akses pengguna selesai dikonfigurasi.</p>
+</section>
+</main>
+<footer>GAPLO | Bank Djoko Tingkir Cabang Kedawung</footer>
+<script>
+document.getElementById("creditForm").addEventListener("submit",function(e){
+e.preventDefault();
+alert("Tampilan formulir berhasil diuji. Pengiriman data belum diaktifkan.");
+});
+</script>
+</body>
+</html>
