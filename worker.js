@@ -121,10 +121,15 @@ if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       if (url.pathname === "/api/admin/create-link" &&
           request.method === "POST") {
 
-        if (!env.ADMIN_SETUP_KEY ||
-            request.headers.get("X-Admin-Setup-Key") !== env.ADMIN_SETUP_KEY) {
-          return json({ error: "Akses administrator ditolak" }, 401);
-        }
+        const inputKey = (
+  request.headers.get("X-Admin-Setup-Key") || ""
+).trim();
+
+const savedKey = String(env.ADMIN_SETUP_KEY || "").trim();
+
+if (!savedKey || inputKey !== savedKey) {
+  return json({ error: "Akses administrator ditolak" }, 401);
+}
 
         const body = await request.json();
         const role = body.role;
