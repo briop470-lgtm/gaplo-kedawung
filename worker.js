@@ -121,16 +121,32 @@ if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       if (url.pathname === "/api/admin/create-link" &&
           request.method === "POST") {
 
-        const inputKey = (
+      const inputKey = (
   request.headers.get("X-Admin-Setup-Key") || ""
 ).trim();
 
 const savedKey = String(env.ADMIN_SETUP_KEY || "").trim();
 
-if (!savedKey || inputKey !== savedKey) {
-  return json({ error: "Akses administrator ditolak" }, 401);
+if (!savedKey) {
+  return json({
+    error: "ADMIN_SETUP_KEY tidak terbaca di Worker",
+    pemeriksaan: "SECRET_KOSONG"
+  }, 500);
 }
 
+if (!inputKey) {
+  return json({
+    error: "Kunci tidak terkirim dari halaman administrator",
+    pemeriksaan: "INPUT_KOSONG"
+  }, 401);
+}
+
+if (inputKey !== savedKey) {
+  return json({
+    error: "Kunci tidak cocok dengan secret Cloudflare",
+    pemeriksaan: "KUNCI_TIDAK_COCOK"
+  }, 401);
+}
         const body = await request.json();
         const role = body.role;
         let marketing_id = null;
